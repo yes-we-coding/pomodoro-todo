@@ -2,6 +2,19 @@
 
 一个轻量、离线优先的 Windows 番茄钟 + 待办桌面应用。单文件 HTML 前端 + C# 托盘宿主，打包为免安装单 exe。
 
+[![Release](https://img.shields.io/github/v/release/yes-we-coding/pomodoro-todo)](https://github.com/yes-we-coding/pomodoro-todo/releases/latest)
+[![License](https://img.shields.io/github/license/yes-we-coding/pomodoro-todo)](LICENSE)
+
+> 🌐 **想用网页版？** 不用安装，手机/电脑浏览器直接打开：
+> **https://yes-we-coding.github.io/pomodoro-todo-web/** （支持安装到主屏幕、离线可用）
+> 源码：[pomodoro-todo-web](https://github.com/yes-we-coding/pomodoro-todo-web)
+
+## ⬇️ 下载
+
+直接下载免安装单文件 exe，双击即用（需 Windows 10/11 + Microsoft Edge）：
+
+**[下载最新版 PomodoroTodo.exe](https://github.com/yes-we-coding/pomodoro-todo/releases/latest)**
+
 ## ✨ 功能
 
 ### 计时
