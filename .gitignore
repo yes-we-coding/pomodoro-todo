@@ -1,0 +1,21 @@
+# 构建产物
+*.exe
+build/*.exe
+build/bin/
+build/obj/
+*.pdb
+*.dll
+
+# 运行时不必要文件
+*.log
+*.tmp
+
+# 系统
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
