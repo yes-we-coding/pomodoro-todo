@@ -657,7 +657,7 @@ namespace PomodoroTodo
                     string body = ReadBody(ctx);
                     lock (stateLock)
                     {
-                        try { File.WriteAllText(dataFile, body, new UTF8Encoding(false)); } catch { }
+                        try { AtomicWriteAllText(dataFile, body); } catch { }
                     }
                     WriteSnapshot(body, false);   // A: 随手滚动快照
                     ReplyText(ctx, "{\"ok\":true}");
@@ -703,7 +703,7 @@ namespace PomodoroTodo
                             string content = File.ReadAllText(sp, Encoding.UTF8);
                             lock (stateLock)
                             {
-                                try { File.WriteAllText(dataFile, content, new UTF8Encoding(false)); } catch { }
+                                try { AtomicWriteAllText(dataFile, content); } catch { }
                             }
                             // 恢复前先留一份当前状态
                             try { File.WriteAllText(Path.Combine(snapshotDir, "snap_before_restore.json"), content, new UTF8Encoding(false)); } catch { }
@@ -816,7 +816,7 @@ namespace PomodoroTodo
                 ParseSession(raw);
                 // 页面更新了状态（弹窗处理/暂停/跳过），取消后台武装
                 armed = false;
-                try { File.WriteAllText(sessionFile, raw, new UTF8Encoding(false)); } catch { }
+                try { AtomicWriteAllText(sessionFile, raw); } catch { }
             }
         }
         static void ParseSession(string raw)
@@ -842,6 +842,39 @@ namespace PomodoroTodo
         static bool TodayBackupExists()
         {
             return File.Exists(Path.Combine(backupDir, "番茄待办_" + DayKey(DateTime.Now) + ".json"));
+        }
+
+        // 原子写入：先写临时文件并刷盘，再用 File.Replace 原子替换目标文件。
+        // 避免写到一半断电/强杀进程导致 data.json / session.json 被截断损坏。
+        static void AtomicWriteAllText(string path, string contents)
+        {
+            string dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            string tmp = Path.Combine(dir, ".~" + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                File.WriteAllText(tmp, contents, new UTF8Encoding(false));
+                // 强制把缓冲刷到磁盘
+                using (var fs = new FileStream(tmp, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    fs.Flush(flushToDisk: true);
+                }
+                if (File.Exists(path))
+                {
+                    // File.Replace 要求源/目标在同一卷；备份参数传 null
+                    File.Replace(tmp, path, null);
+                }
+                else
+                {
+                    File.Move(tmp, path);
+                }
+            }
+            catch
+            {
+                // 原子路径失败时回退为直接写入，保证至少尝试落盘
+                try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+                throw;
+            }
         }
 
         static void WriteBackup(string body)
